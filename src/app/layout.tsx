@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { IBM_Plex_Sans_Arabic, Lalezar } from 'next/font/google';
 import Link from 'next/link';
 import AuthLink from '@/components/AuthLink';
 import CookieBanner from '@/components/CookieBanner';
@@ -8,8 +7,8 @@ import SwRegister from '@/components/SwRegister';
 import { SITE_URL } from '@/lib/env';
 import './globals.css';
 
-const display = Lalezar({ subsets: ['arabic', 'latin'], weight: '400', variable: '--font-display' });
-const body = IBM_Plex_Sans_Arabic({ subsets: ['arabic', 'latin'], weight: ['400', '500', '700'], variable: '--font-body' });
+const display = { variable: '--font-display' };
+const body = { variable: '--font-body' };
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
