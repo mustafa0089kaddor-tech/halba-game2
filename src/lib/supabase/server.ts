@@ -8,7 +8,7 @@ export function supabaseServer() {
   return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     cookies: {
       getAll: () => store.getAll(),
-      setAll: (list) => {
+      setAll: (list: { name: string; value: string; options: Record<string, any> }[]) => {
         try { list.forEach(({ name, value, options }) => store.set(name, value, options)); } catch { /* server component */ }
       },
     },

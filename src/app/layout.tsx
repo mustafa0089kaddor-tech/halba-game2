@@ -5,7 +5,7 @@ import CookieBanner from '@/components/CookieBanner';
 import Logo from '@/components/Logo';
 import SwRegister from '@/components/SwRegister';
 import { SITE_URL } from '@/lib/env';
-import './globals.css';
+import '@/app/globals.css';
 
 const display = { variable: '--font-display' };
 const body = { variable: '--font-body' };
@@ -18,7 +18,12 @@ export const metadata: Metadata = {
   openGraph: { type: 'website', locale: 'ar_AR', siteName: 'حلبة', title: 'حلبة | لعبة أسئلة جماعية بين فريقين', description: 'فريقان، لوحة فئات، وسهرة تحدٍّ كاملة.' },
   icons: { icon: '/icon.svg', apple: '/icon-192.png' },
 };
-export const viewport: Viewport = { themeColor: '#0A2F3A', width: 'device-width', initialScale: 1 };
+
+export const viewport: Viewport = {
+  themeColor: '#0A2F3A',
+  width: 'device-width',
+  initialScale: 1,
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
