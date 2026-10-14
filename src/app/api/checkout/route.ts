@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     success_url: `${SITE_URL}/account?paid=1`,
     cancel_url: `${SITE_URL}/pricing`,
     allow_promotion_codes: true,
-    locale: 'ar',
+    locale: 'ar-SA',
     ...(profile?.stripe_customer_id ? { customer: profile.stripe_customer_id } : { customer_email: user.email ?? undefined }),
   };
 
