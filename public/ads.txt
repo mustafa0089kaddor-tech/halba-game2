@@ -1,0 +1,2 @@
+# ضع هنا السطر الذي يعطيك إياه AdSense بعد الموافقة، مثل:
+# google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
