@@ -64,7 +64,7 @@ export async function getCategories(ent: Entitlements): Promise<Category[]> {
 function fromBank(q: BankQuestion): Question {
   return {
     id: q.id,
-    category_id: q.cat,
+   category_id: q.cat.startsWith('med-') ? 'medicine' : q.cat,
     points: q.points,
     slot: 0,
     type: q.type,
