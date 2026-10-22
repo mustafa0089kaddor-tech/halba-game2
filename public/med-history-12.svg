@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675" role="img" aria-label="تاريخ الطب">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#92400e"/><stop offset="1" stop-color="#451a03"/></linearGradient></defs>
+<rect width="1200" height="675" fill="url(#g)"/>
+<circle cx="1050" cy="120" r="260" fill="#fff" opacity=".06"/><circle cx="150" cy="600" r="220" fill="#fff" opacity=".06"/>
+<g transform="translate(400 90) scale(4)" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M24 16 H76 V76 C76 84 68 88 62 84 H30 C22 84 18 78 24 70 Z"/><path d="M34 34 H64 M34 48 H64 M34 62 H56"/></g>
+<text x="600" y="545" text-anchor="middle" direction="rtl" font-family="Tahoma, 'Noto Naskh Arabic', 'Segoe UI', Arial, sans-serif" font-size="64" font-weight="700" fill="#fff">تاريخ الطب</text>
+<text x="600" y="608" text-anchor="middle" direction="rtl" font-family="Tahoma, 'Noto Naskh Arabic', 'Segoe UI', Arial, sans-serif" font-size="30" fill="#fff" opacity=".85">سؤال ١٢ · صعب</text>
+</svg>

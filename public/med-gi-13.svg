@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675" role="img" aria-label="الجهاز الهضمي">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b45309"/><stop offset="1" stop-color="#78350f"/></linearGradient></defs>
+<rect width="1200" height="675" fill="url(#g)"/>
+<circle cx="1050" cy="120" r="260" fill="#fff" opacity=".06"/><circle cx="150" cy="600" r="220" fill="#fff" opacity=".06"/>
+<g transform="translate(400 90) scale(4)" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M42 12 V30 C42 40 30 44 24 54 C14 70 28 90 52 88 C76 86 86 66 74 54 C66 46 58 44 58 32 V12"/><path d="M36 12 H64"/></g>
+<text x="600" y="545" text-anchor="middle" direction="rtl" font-family="Tahoma, 'Noto Naskh Arabic', 'Segoe UI', Arial, sans-serif" font-size="64" font-weight="700" fill="#fff">الجهاز الهضمي</text>
+<text x="600" y="608" text-anchor="middle" direction="rtl" font-family="Tahoma, 'Noto Naskh Arabic', 'Segoe UI', Arial, sans-serif" font-size="30" fill="#fff" opacity=".85">سؤال ١٣ · صعب</text>
+</svg>
