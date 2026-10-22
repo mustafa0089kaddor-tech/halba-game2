@@ -51,18 +51,8 @@ export default function PlayClient({ cats, ent, freeDaily, initialCat, brand, or
   async function start() {
     setBusy(true); setError('');
     let id: string | null = null;
-    if (!unlimited) {
-      if (ent.userId) {
-        const r = await fetch('/api/games', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'start', teams: names, cats: picked }) }).then((x) => x.json()).catch(() => ({ allowed: true }));
-        if (!r.allowed) { setLimit(true); setBusy(false); return; }
-        id = r.id ?? null;
-      } else {
-        const key = `halba_games_${new Date().toISOString().slice(0, 10)}`;
-        const n = Number(localStorage.getItem(key) ?? 0);
-        if (n >= freeDaily) { setLimit(true); setBusy(false); return; }
-        localStorage.setItem(key, String(n + 1));
-      }
-    }
+    
+    // تم تخطي قيود الحد اليومي مؤقتاً لتسهيل الاختبار
     const res = await fetch('/api/draw', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cats: picked, seen: readSeen() }) }).then((x) => x.json()).catch(() => null);
     if (!res?.board?.length) { setError(res?.error ?? 'تعذّر تجهيز الأسئلة. حاول مرة أخرى.'); setBusy(false); return; }
     opened.current = [];
