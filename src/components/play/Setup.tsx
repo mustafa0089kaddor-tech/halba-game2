@@ -88,7 +88,11 @@ export default function Setup({ cats, names, setNames, picked, setPicked, onStar
               </button>
             );
           })}
-          {!shown.length && <p className="col-span-full py-6 text-center text-paper/70">لا توجد فئة بهذا الاسم.</p>}
+          {!shown.length && (
+            <p className="col-span-full py-6 text-center text-paper/70">
+              {q.trim() ? 'لا توجد فئة بهذا الاسم.' : 'لا توجد فئات في هذا المحور بعد.'}
+            </p>
+          )}
         </div>
         {cats.some((c) => c.locked && c.playable) && <p className="mt-3 text-sm text-paper/70">الفئات المقفلة للمشتركين أو تُباع كباقات. <Link href="/pricing" className="text-saffron underline">شاهد الخيارات</Link></p>}
       </section>
