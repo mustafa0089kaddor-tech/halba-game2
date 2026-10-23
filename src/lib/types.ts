@@ -44,6 +44,8 @@ export interface Category {
   sponsor?: Sponsor | null;
   /** فارغة في قائمة الفئات؛ تُملأ فقط في اللوحة التي تُسحب عند بدء اللعب */
   questions: Question[];
+  /** فئة من الكتالوج لا صف لها في قاعدة البيانات، أسئلتها من البنك المحلي */
+  bundled?: boolean;
 }
 
 export interface Entitlements { userId: string | null; subscriber: boolean; packs: string[]; isAdmin: boolean }

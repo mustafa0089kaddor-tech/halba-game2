@@ -32,6 +32,13 @@ function shuffle<T>(a: T[]): T[] {
   return r;
 }
 
+/** عدد أسئلة البنك المحلي لكل مستوى في فئة. */
+function bankCounts(slug: string): Category['counts'] {
+  const counts = { 200: 0, 400: 0, 600: 0 } as Category['counts'];
+  BANK.filter((q) => q.cat === slug).forEach((q) => counts[q.points]++);
+  return counts;
+}
+
 /** الفئات مع حجم بنكها وحالة القفل. لا تحتوي أسئلة. */
 export async function getCategories(ent: Entitlements): Promise<Category[]> {
   if (!hasAdmin) {
@@ -42,14 +49,15 @@ export async function getCategories(ent: Entitlements): Promise<Category[]> {
     });
   }
   const db = supabaseAdmin();
-  const [{ data: cats }, { data: stats }] = await Promise.all([
+  const [{ data: cats }, { data: stats }, { data: allSlugs }] = await Promise.all([
     db.from('categories').select('*, sponsor:sponsors(id,name,logo_url,url,blurb)').eq('published', true).order('sort').order('created_at'),
     db.from('category_stats').select('*'),
+    db.from('categories').select('slug'),
   ]);
   const st = new Map((stats ?? []).map((s) => [s.category_id, s]));
   const open = (c: { premium: boolean; pack_id: string | null }) =>
     ent.subscriber || ent.isAdmin ? (c.pack_id ? ent.packs.includes(c.pack_id) || ent.isAdmin : true) : !c.premium && !c.pack_id;
-  return (cats ?? []).map((c) => {
+  const dbRows: Category[] = (cats ?? []).map((c) => {
     const s = st.get(c.id);
     const counts = { 200: s?.c200 ?? 0, 400: s?.c400 ?? 0, 600: s?.c600 ?? 0 } as Category['counts'];
     return {
@@ -58,13 +66,24 @@ export async function getCategories(ent: Entitlements): Promise<Category[]> {
       counts, playable: TIERS.every((t) => counts[t] >= MIN_PER_TIER), questions: [],
     };
   });
+  // فئات الكتالوج التي لا يوجد لها صف في قاعدة البيانات أصلاً (مثل فئات الطب) تُعرض من البنك المحلي.
+  // لا نعيد الفئة إن وُجد صفها غير منشور، لأن ذلك قرار إداري متعمّد.
+  const known = new Set((allSlugs ?? []).map((r: { slug: string }) => r.slug));
+  const bundled: Category[] = CATALOG.filter((c) => !known.has(c.slug)).map((c) => {
+    const counts = bankCounts(c.slug);
+    return {
+      id: c.slug, slug: c.slug, name: c.name, emoji: c.emoji, color: c.color, description: c.description, group: c.group,
+      premium: false, locked: false, sponsor: null, counts, playable: TIERS.every((t) => counts[t] >= MIN_PER_TIER), questions: [], bundled: true,
+    };
+  });
+  return [...dbRows, ...bundled];
 }
 
 /** يحوّل سؤال البنك المحلي إلى شكل السؤال الموحّد الذي تستخدمه اللعبة (نفس شكل جدول questions في Supabase). */
 function fromBank(q: BankQuestion): Question {
   return {
     id: q.id,
-   category_id: q.cat.startsWith('med-') ? 'medicine' : q.cat,
+    category_id: q.cat,
     points: q.points,
     slot: 0,
     type: q.type,
@@ -92,9 +111,14 @@ export async function drawBoard(ent: Entitlements, catIds: string[], seenIds: st
   if (!hasAdmin) {
     pool = BANK.filter((q) => catIds.includes(q.cat)).map(fromBank);
   } else {
+    const bundled = new Set(cats.filter((c) => c.bundled).map((c) => c.id));
+    const dbIds = catIds.filter((id) => !bundled.has(id));
     const db = supabaseAdmin();
-    const { data } = await db.from('questions').select('id,category_id,points,type,question,answer,options,source,media_url,media_credit,media_license,flags,source_url').in('category_id', catIds).eq('active', true).eq('status', 'approved');
-    pool = (data ?? []).map((q) => ({ ...q, slot: 0 })) as Question[];
+    pool = BANK.filter((q) => bundled.has(q.cat)).map(fromBank);
+    if (dbIds.length) {
+      const { data } = await db.from('questions').select('id,category_id,points,type,question,answer,options,source,media_url,media_credit,media_license,flags,source_url').in('category_id', dbIds).eq('active', true).eq('status', 'approved');
+      pool.push(...((data ?? []).map((q) => ({ ...q, slot: 0 })) as Question[]));
+    }
     if (ent.userId) {
       const { data: s } = await db.from('seen_questions').select('question_id').eq('user_id', ent.userId).order('seen_at', { ascending: false }).limit(4000);
       (s ?? []).forEach((x) => seen.add(x.question_id));
@@ -119,7 +143,7 @@ export async function markSeen(userId: string, ids: string[]) {
 
 export async function getTeasers(cat: Category): Promise<string[]> {
   if (cat.locked || cat.premium || !cat.playable) return [];
-  if (!hasAdmin) return BANK.filter((q) => q.cat === cat.slug && q.points === 200).map((q) => q.question);
+  if (!hasAdmin || cat.bundled) return BANK.filter((q) => q.cat === cat.slug && q.points === 200).map((q) => q.question);
   const { data } = await supabaseAdmin().from('questions').select('question').eq('category_id', cat.id).eq('points', 200).eq('active', true).eq('status', 'approved').limit(2);
   return (data ?? []).map((q) => q.question);
 }
