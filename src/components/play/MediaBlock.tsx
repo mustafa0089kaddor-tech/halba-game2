@@ -9,9 +9,11 @@ function Rights({ license, credit }: { license?: string | null; credit?: string 
   const r = license ? RIGHTS[license] : undefined;
   if (!r && !credit) return null;
   return (
-    <figcaption className="mt-1 flex items-center justify-center gap-2 text-xs text-paper/60">
-      {r && <span role="img" aria-label={r.label} className="text-base">{r.i}</span>}
-      {credit && <span>{credit}</span>}
+    <figcaption className="mt-2 flex items-center justify-center">
+      <span className="inline-flex max-w-full items-center justify-center gap-2 rounded-full border border-purple-500/30 bg-deep/60 px-3 py-1 text-xs text-paper/70">
+        {r && <span role="img" aria-label={r.label} className="text-base">{r.i}</span>}
+        {credit && <span>{credit}</span>}
+      </span>
     </figcaption>
   );
 }
@@ -31,6 +33,7 @@ function youtube(u: string): { id: string; start: number } | null {
 export default function MediaBlock({ q }: { q: Question }) {
   const [play, setPlay] = useState(false);
   const [bad, setBad] = useState(false);
+  const [playing, setPlaying] = useState(false);
   if (!q.media_url || q.type === 'text') return null;
   // حماية الحقوق: لا يُعرض إلا ما عُلِّم بأنه مرخّص أو من إنتاجنا
   if (q.media_license !== 'free' && q.media_license !== 'own') return null;
@@ -39,27 +42,55 @@ export default function MediaBlock({ q }: { q: Question }) {
     if (bad) return null;
     return (
       <figure className="w-full text-center">
-        <img src={q.media_url} alt="" className="mx-auto max-h-64 w-auto max-w-full rounded-xl object-contain" onError={() => setBad(true)} />
+        <div className="media-frame">
+          <img src={q.media_url} alt="" className="mx-auto max-h-72 w-auto max-w-full rounded-xl object-contain sm:max-h-96" onError={() => setBad(true)} />
+        </div>
         <Rights license={q.media_license} credit={q.media_credit} />
       </figure>
     );
   }
-  if (q.type === 'audio') return <figure className="w-full"><audio controls preload="none" src={q.media_url} className="w-full" /><Rights license={q.media_license} credit={q.media_credit} /></figure>;
+  if (q.type === 'audio') {
+    return (
+      <figure className="w-full">
+        <div className="media-frame w-full !p-3" data-playing={playing}>
+          <div className="eq" aria-hidden>
+            {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => <span key={i} style={{ animationDelay: `${(i * 0.11).toFixed(2)}s` }} />)}
+          </div>
+          <audio controls preload="none" src={q.media_url} className="mt-3 w-full"
+            onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} />
+        </div>
+        <Rights license={q.media_license} credit={q.media_credit} />
+      </figure>
+    );
+  }
 
   const yt = youtube(q.media_url);
   if (yt) {
     return (
       <figure className="w-full">
-        {play ? (
-          <iframe className="aspect-video w-full rounded-xl" title="فيديو السؤال" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            src={`https://www.youtube-nocookie.com/embed/${yt.id}?rel=0&modestbranding=1&playsinline=1&autoplay=1${yt.start ? `&start=${yt.start}` : ''}`} />
-        ) : (
-          <button className="grid aspect-video w-full place-items-center rounded-xl bg-deep text-4xl hover:bg-night" onClick={() => setPlay(true)} aria-label="تشغيل الفيديو">▶</button>
-        )}
+        <div className="media-frame w-full">
+          {play ? (
+            <iframe className="aspect-video w-full rounded-xl" title="فيديو السؤال" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              src={`https://www.youtube-nocookie.com/embed/${yt.id}?rel=0&modestbranding=1&playsinline=1&autoplay=1${yt.start ? `&start=${yt.start}` : ''}`} />
+          ) : (
+            <button type="button" className="media-poster" onClick={() => setPlay(true)} aria-label="تشغيل الفيديو">
+              <span className="media-play">
+                <svg viewBox="0 0 24 24" width="34" height="34" fill="currentColor" aria-hidden focusable="false"><path d="M8 5v14l11-7z" /></svg>
+              </span>
+            </button>
+          )}
+        </div>
         <Rights license={q.media_license} credit={q.media_credit} />
       </figure>
     );
   }
-  return <figure className="w-full"><video controls playsInline preload="metadata" src={q.media_url} className="mx-auto max-h-72 w-full rounded-xl" /><Rights license={q.media_license} credit={q.media_credit} /></figure>;
+  return (
+    <figure className="w-full">
+      <div className="media-frame w-full">
+        <video controls playsInline preload="metadata" src={q.media_url} className="mx-auto max-h-72 w-full rounded-xl sm:max-h-96" />
+      </div>
+      <Rights license={q.media_license} credit={q.media_credit} />
+    </figure>
+  );
 }
