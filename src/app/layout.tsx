@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { Cairo, Tajawal } from 'next/font/google';
 import Link from 'next/link';
 import AuthLink from '@/components/AuthLink';
 import CookieBanner from '@/components/CookieBanner';
@@ -7,8 +8,20 @@ import SwRegister from '@/components/SwRegister';
 import { SITE_URL } from '@/lib/env';
 import '@/app/globals.css';
 
-const display = { variable: '--font-display' };
-const body = { variable: '--font-body' };
+/* خط العناوين والعدّاد وأسماء الفرق والنتائج: Cairo (متغيّر، يغطي الأوزان 700 و900) */
+const heading = Cairo({
+  subsets: ['arabic', 'latin'],
+  display: 'swap',
+  variable: '--font-heading',
+});
+
+/* خط القراءة للأسئلة والخيارات والنصوص التوضيحية: Tajawal */
+const body = Tajawal({
+  subsets: ['arabic', 'latin'],
+  weight: ['400', '500', '700', '800'],
+  display: 'swap',
+  variable: '--font-body',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -25,7 +38,7 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const NAV_LINK = 'rounded-full px-3 py-2 font-display text-sm font-bold text-paper/80 transition hover:bg-reef/70 hover:text-paper sm:px-4';
+const NAV_LINK = 'rounded-full px-3 py-2 font-heading text-sm font-bold text-paper/80 transition hover:bg-reef/70 hover:text-paper sm:px-4';
 
 const FOOTER_LINKS: [string, string][] = [
   ['/privacy', 'الخصوصية'],
@@ -38,8 +51,8 @@ const FOOTER_LINKS: [string, string][] = [
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" className={`${display.variable} ${body.variable}`}>
-      <body>
+    <html lang="ar" dir="rtl" className={`${heading.variable} ${body.variable}`}>
+      <body className="font-body">
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-50 focus:rounded-xl focus:bg-saffron focus:px-4 focus:py-2 focus:font-bold focus:text-deep"
