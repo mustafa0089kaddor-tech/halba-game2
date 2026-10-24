@@ -1,5 +1,6 @@
 // catalog.ts: فئات لعبة «حلبة» (المجموعات GROUPS والفئات CATALOG).
 // تحديث يدوي: أُضيفت حقول الصورة الاختيارية للفئات الطبية، وفئات طبية جديدة تطابق أقسام bank.ts.
+// أُضيفت مجموعة وفئة «تحدي العقول» (iq) يدوياً.
 // تنبيه: تشغيل scripts/gen_data.py أو add_medical.mjs يعيد كتابة هذا الملف ويمحو هذه التعديلات.
 export const GROUPS = [
  {
@@ -61,6 +62,12 @@ export const GROUPS = [
   "name": "الطب والعلوم الصحية",
   "emoji": "🩺",
   "color": "#EF4444"
+ },
+ {
+  "key": "iq",
+  "name": "تحدي العقول",
+  "emoji": "🧠",
+  "color": "#8B5CF6"
  }
 ] as const;
 
@@ -1573,5 +1580,14 @@ export const CATALOG: CatalogCategory[] = [
   "imageCredit": "الصورة: ويكيميديا كومنز، والمؤلف والرخصة مذكوران في صفحة الملف",
   "imageSourceUrl": "https://commons.wikimedia.org/wiki/File:Edward_Jenner_by_James_Northcote.jpg",
   "imageLicense": "free"
+ },
+ {
+  "slug": "iq",
+  "name": "تحدي العقول",
+  "emoji": "🧠",
+  "color": "#8B5CF6",
+  "group": "iq",
+  "sort": 150,
+  "description": "ألغاز لفظية وتفكير جانبي وأحاجي منطقية وأنماط رقمية ضمن «تحدي العقول»، بثلاثة مستويات: ٢٠٠ و٤٠٠ و٦٠٠ نقطة."
  }
 ];
