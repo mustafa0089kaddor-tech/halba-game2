@@ -23,12 +23,38 @@ const body = Tajawal({
   variable: '--font-body',
 });
 
+// ضمان الرابط الكامل للعبة لتعمل بطاقات المعاينة بدقة
+const siteUrl = SITE_URL && !SITE_URL.includes('localhost')
+  ? SITE_URL
+  : 'https://halba-challenge.netlify.app';
+
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+  metadataBase: new URL(siteUrl),
   title: { default: 'حلبة | لعبة أسئلة جماعية بين فريقين', template: '%s | حلبة' },
   description: 'لوحة فئات ونقاط لفريقين يتنافسان: اختاروا الفئات، اكشفوا الأسئلة، واجمعوا النقاط. تعمل على الجوال بدون تحميل.',
   manifest: '/manifest.webmanifest',
-  openGraph: { type: 'website', locale: 'ar_AR', siteName: 'حلبة', title: 'حلبة | لعبة أسئلة جماعية بين فريقين', description: 'فريقان، لوحة فئات، وسهرة تحدٍّ كاملة.' },
+  openGraph: {
+    type: 'website',
+    locale: 'ar_AR',
+    siteName: 'حلبة',
+    url: siteUrl,
+    title: 'حلبة | لعبة أسئلة جماعية بين فريقين',
+    description: 'فريقان، لوحة فئات، وسهرة تحدٍّ كاملة.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'حلبة | منصة التحديات والمسابقات الجماعية',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'حلبة | لعبة أسئلة جماعية بين فريقين',
+    description: 'فريقان، لوحة فئات، وسهرة تحدٍّ كاملة.',
+    images: ['/og-image.png'],
+  },
   icons: { icon: '/icon.svg', apple: '/icon-192.png' },
 };
 
