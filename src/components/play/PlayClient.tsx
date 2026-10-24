@@ -8,9 +8,30 @@ import Setup from './Setup';
 
 type Phase = 'setup' | 'board' | 'results';
 const SAVE = 'halba_game_v2';
-const SEEN = 'halba_seen_v1';
-const readSeen = (): string[] => { try { return JSON.parse(localStorage.getItem(SEEN) ?? '[]'); } catch { return []; } };
-const addSeen = (id: string) => { const l = readSeen(); if (!l.includes(id)) { l.push(id); localStorage.setItem(SEEN, JSON.stringify(l.slice(-1200))); } };
+
+/* سجل الأسئلة التي ظهرت سابقاً (منع التكرار): معرّف الفئة ← مستوى النقاط ← معرّفات الأسئلة.
+   يُحفظ لكل فئة ومستوى حتى نعرف متى نفدت الأسئلة غير المكررة فنصفّر سجل تلك الفئة وحدها. */
+const PLAYED = 'halba_played_q_ids';
+type Played = Record<string, Record<string, string[]>>;
+const LEVELS = [200, 400, 600] as const;
+const readPlayed = (): Played => {
+  try {
+    const v = JSON.parse(localStorage.getItem(PLAYED) ?? '{}');
+    return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+  } catch { return {}; }
+};
+const writePlayed = (p: Played) => { try { localStorage.setItem(PLAYED, JSON.stringify(p)); } catch { /* ignore */ } };
+const addPlayed = (catId: string, points: number, qid: string) => {
+  const p = readPlayed();
+  const levels = p[catId] ?? {};
+  const list = levels[points] ?? [];
+  if (list.includes(qid)) return;
+  levels[points] = [...list, qid].slice(-1200);
+  p[catId] = levels;
+  writePlayed(p);
+};
+/** المصفوفة المسطّحة usedQuestions التي تُرسَل للسحب لاستثنائها */
+const flatPlayed = (p: Played): string[] => Object.values(p).flatMap((levels) => Object.values(levels).flatMap((l) => l));
 const freshTeam = (name: string): TeamState => ({ name: name.trim() || 'فريق', score: 0, aids: { double: true, fifty: true, time: true } });
 
 /** ألوان الفرق وشارات المساعدات المعروضة في لوحة النتائج */
@@ -58,6 +79,22 @@ export default function PlayClient({ cats, ent, initialCat, brand, orgSlug, unli
     else sessionStorage.removeItem(SAVE);
   }, [phase, teams, board, done, turn, gameId]);
 
+  /** يرجع usedQuestions للسحب، بعد تصفير سجل أي فئة مختارة لا يكفي ما تبقّى فيها من أسئلة غير مكررة لملء صفها (تُسحب عندها عشوائياً من كامل الفئة) */
+  function usedQuestionsForDraw(): string[] {
+    const played = readPlayed();
+    let changed = false;
+    for (const id of picked) {
+      const c = cats.find((x) => x.id === id);
+      const levels = played[id];
+      if (!c?.counts || !levels) continue;
+      const counts = c.counts;
+      const exhausted = LEVELS.some((p) => (counts[p] ?? 0) - (levels[p]?.length ?? 0) < SLOT_POINTS.filter((x) => x === p).length);
+      if (exhausted) { delete played[id]; changed = true; }
+    }
+    if (changed) writePlayed(played);
+    return flatPlayed(played);
+  }
+
   async function start() {
     setBusy(true); setError('');
     let id: string | null = null;
@@ -66,13 +103,14 @@ export default function PlayClient({ cats, ent, initialCat, brand, orgSlug, unli
       const r = await fetch('/api/games', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'start', teams: names, cats: picked }) }).then((x) => x.json()).catch(() => ({}));
       id = r.id ?? null;
     }
-    const res = await fetch('/api/draw', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cats: picked, seen: readSeen() }) }).then((x) => x.json()).catch(() => null);
+    const usedQuestions = usedQuestionsForDraw();
+    const res = await fetch('/api/draw', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cats: picked, seen: usedQuestions }) }).then((x) => x.json()).catch(() => null);
     if (!res?.board?.length) { setError(res?.error ?? 'تعذّر تجهيز الأسئلة. حاول مرة أخرى.'); setBusy(false); return; }
     opened.current = [];
     setGameId(id); setTeams(names.map(freshTeam)); setBoard(res.board); setDone({}); setTurn(0); setPhase('board'); setBusy(false);
   }
 
-  function openQuestion(q: Question, cat: Category) { addSeen(q.id); opened.current.push(q.id); setActive({ q, cat }); }
+  function openQuestion(q: Question, cat: Category) { addPlayed(cat.id, SLOT_POINTS[q.slot], q.id); opened.current.push(q.id); setActive({ q, cat }); }
 
   function finishQuestion(winner: number, points: number) {
     if (!active) return;
