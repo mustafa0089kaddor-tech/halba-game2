@@ -25,6 +25,9 @@ const body = Tajawal({
 // الرابط الرسمي للموقع
 const siteUrl = 'https://halba-challenge2.netlify.app';
 
+// الرابط المباشر للصورة
+const ogImageUrl = 'https://i.ibb.co/KxL41cvR/opengraph-image.jpg';
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: 'حلبة | لعبة أسئلة جماعية بين فريقين', template: '%s | حلبة' },
@@ -39,7 +42,7 @@ export const metadata: Metadata = {
     description: 'فريقان، لوحة فئات، وسهرة تحدٍّ كاملة.',
     images: [
       {
-        url: '/og-image.png',
+        url: ogImageUrl,
         width: 1200,
         height: 630,
         alt: 'حلبة | منصة التحديات والمسابقات الجماعية',
@@ -50,7 +53,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'حلبة | لعبة أسئلة جماعية بين فريقين',
     description: 'فريقان، لوحة فئات، وسهرة تحدٍّ كاملة.',
-    images: ['/og-image.png'],
+    images: [ogImageUrl],
   },
   icons: { icon: '/icon.svg', apple: '/icon-192.png' },
 };
