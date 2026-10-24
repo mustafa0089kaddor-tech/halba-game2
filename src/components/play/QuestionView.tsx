@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import Flags from './Flags';
-import MediaBlock from './MediaBlock';
+import MediaBlock, { canShowImage, needsImageInQuestion } from './MediaBlock';
 import SourceQr from './SourceQr';
 import { ar, type Brand, type Category, type Question } from '@/lib/types';
 
@@ -31,6 +31,7 @@ export default function QuestionView({ q, cat, teams, turn, brand, onAid, onFini
   const [doubleBy, setDoubleBy] = useState<number | null>(null);
   const [fifty, setFifty] = useState<string[] | null>(null);
   const [fb, setFb] = useState<'none' | 'reasons' | 'sent'>('none');
+  const [imageOpen, setImageOpen] = useState(false);
 
   useEffect(() => {
     if (revealed || left <= 0) return;
@@ -39,6 +40,10 @@ export default function QuestionView({ q, cat, teams, turn, brand, onAid, onFini
   }, [left, revealed]);
 
   const canFifty = useMemo(() => (q.options?.length ?? 0) >= 4, [q]);
+
+  // الصورة تظهر أثناء السؤال إذا كان نص السؤال يعتمد عليها، أو إذا فتحها الفريق يدوياً. تختفي عند الكشف لأنها تظهر في صندوق الإجابة.
+  const autoImage = needsImageInQuestion(q);
+  const showQuestionImage = !revealed && (autoImage || imageOpen);
 
   function applyAid(team: number, kind: Kind) {
     if (revealed || !teams[team].aids[kind]) return;
@@ -88,7 +93,10 @@ export default function QuestionView({ q, cat, teams, turn, brand, onAid, onFini
         <div className="card flex flex-1 flex-col items-center justify-center gap-4 text-center">
           <Flags flags={q.flags} />
           <p className="text-2xl font-bold leading-[1.9] sm:text-3xl">{q.question}</p>
-          <MediaBlock q={q} mode="question" />
+          {!revealed && !autoImage && !imageOpen && canShowImage(q) && (
+            <button type="button" className="btn btn-line !px-3 !py-1 text-xs" onClick={() => setImageOpen(true)}>👁️ إظهار صورة السؤال</button>
+          )}
+          <MediaBlock q={q} mode="question" showImage={showQuestionImage} />
           {fifty && !revealed && (
             <div className="flex w-full flex-wrap justify-center gap-2" aria-label="خياران متبقيان">
               {fifty.map((o) => <span key={o} className="rounded-xl border border-saffron px-4 py-2 font-bold text-saffron">{o}</span>)}
