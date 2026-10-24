@@ -22,8 +22,12 @@ const config: Config = {
         paper: '#F3EEFF',
       },
       fontFamily: {
-        display: ['"Readex Pro"', 'var(--font-display)', 'Cairo', 'system-ui', 'sans-serif'],
-        body: ['Cairo', 'var(--font-body)', 'Tajawal', 'system-ui', 'sans-serif'],
+        /* العناوين، العدّاد، أسماء الفرق، شاشات النتائج: Cairo 700/900 */
+        heading: ['var(--font-heading)', 'Cairo', 'system-ui', 'sans-serif'],
+        /* اسم قديم مرادف لـ heading كي لا ينكسر أي ملف ما زال يستعمل font-display */
+        display: ['var(--font-heading)', 'Cairo', 'system-ui', 'sans-serif'],
+        /* الأسئلة والخيارات والنصوص التوضيحية: Tajawal 500/700 */
+        body: ['var(--font-body)', 'Tajawal', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         tile: '0 5px 0 #A65A00, 0 10px 18px -6px rgba(255,138,0,.5)',
