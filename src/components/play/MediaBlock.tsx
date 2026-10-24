@@ -5,6 +5,28 @@ import type { Question } from '@/lib/types';
 /** أيقونة الحقوق: 🆓 مرخّصة، ✍️ من إنتاجنا. الوسيط غير المعلَّم بأحدهما لا يُعرض أبداً. */
 const RIGHTS: Record<string, { i: string; label: string }> = { free: { i: '🆓', label: 'مرخّصة للاستخدام' }, own: { i: '✍️', label: 'من إنتاجنا' } };
 
+/** توحيد النص العربي قبل المقارنة: إزالة التشكيل والتطويل، وتوحيد الهمزات والتاء المربوطة والألف المقصورة. */
+function normalizeAr(s: string): string {
+  return s
+    .replace(/[\u0640\u064B-\u065F\u0670]/g, '')
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي');
+}
+
+/** كلمات تدل على أن الصورة جزء لا يتجزأ من السؤال نفسه (تُقارن بعد توحيد النص أعلاه). */
+const IMAGE_CUE = /(الصوره|بالصوره|في الصوره|الشكل|الموضح|خمن|من في|الخريطه)/;
+
+/** هل يعتمد السؤال على صورته؟ إن كان كذلك تظهر الصورة أثناء مرحلة السؤال. */
+export function needsImageInQuestion(q: Question): boolean {
+  return q.type === 'image' && IMAGE_CUE.test(normalizeAr(q.question));
+}
+
+/** هل توجد صورة مرخّصة يمكن عرضها (تُستخدم لزر الإظهار اليدوي). */
+export function canShowImage(q: Question): boolean {
+  return q.type === 'image' && !!q.media_url && (q.media_license === 'free' || q.media_license === 'own');
+}
+
 function Rights({ license, credit }: { license?: string | null; credit?: string | null }) {
   const r = license ? RIGHTS[license] : undefined;
   if (!r && !credit) return null;
@@ -31,18 +53,18 @@ function youtube(u: string): { id: string; start: number } | null {
 }
 
 /**
- * mode='question': الصوت والفيديو فقط (تبقى ظاهرة أثناء السؤال، والصورة محجوبة حتى لا تحرق الإجابة).
+ * mode='question': الصوت والفيديو دائماً، والصورة فقط إذا مُرّر showImage.
  * mode='answer': الصورة فقط (تُعرض عند كشف الإجابة بجانب نص الحل).
  * mode='all' (الافتراضي): كل الوسائط كما كان سابقاً.
  */
-export default function MediaBlock({ q, mode = 'all' }: { q: Question; mode?: 'all' | 'question' | 'answer' }) {
+export default function MediaBlock({ q, mode = 'all', showImage = false }: { q: Question; mode?: 'all' | 'question' | 'answer'; showImage?: boolean }) {
   const [play, setPlay] = useState(false);
   const [bad, setBad] = useState(false);
   const [playing, setPlaying] = useState(false);
   if (!q.media_url || q.type === 'text') return null;
   // حماية الحقوق: لا يُعرض إلا ما عُلِّم بأنه مرخّص أو من إنتاجنا
   if (q.media_license !== 'free' && q.media_license !== 'own') return null;
-  if (mode === 'question' && q.type === 'image') return null;
+  if (mode === 'question' && q.type === 'image' && !showImage) return null;
   if (mode === 'answer' && q.type !== 'image') return null;
 
   if (q.type === 'image') {
