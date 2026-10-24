@@ -101,7 +101,8 @@ function fromBank(q: BankQuestion): Question {
 
 /**
  * يسحب لوحة اللعب: ٢ سؤال من كل مستوى (٢٠٠/٤٠٠/٦٠٠) لكل فئة مختارة.
- * يفضّل الأسئلة التي لم يرها اللاعب، ولا يعيد المرئية إلا عند نفاد غير المرئية في ذلك المستوى.
+ * استثناء صارم لمعرّفات seen (وسجل المستخدم المسجّل في seen_questions): لا يظهر سؤال سبق ظهوره.
+ * وإذا نفد غير المكرر في أي مستوى من فئة، يُصفَّر سجل تلك الفئة وحدها (ومن قاعدة البيانات للمسجّل) ويُسحب منها عشوائياً.
  */
 export async function drawBoard(ent: Entitlements, catIds: string[], seenIds: string[]): Promise<Category[]> {
   const cats = (await getCategories(ent)).filter((c) => catIds.includes(c.id));
@@ -124,15 +125,33 @@ export async function drawBoard(ent: Entitlements, catIds: string[], seenIds: st
       (s ?? []).forEach((x) => seen.add(x.question_id));
     }
   }
-  return cats.map((c) => {
+  const resets: Promise<void>[] = [];
+  const board = cats.map((c) => {
     const mine = pool.filter((q) => q.category_id === c.id);
+    const tiers = TIERS.map((t) => shuffle(mine.filter((q) => q.points === t)));
+    // نفاد غير المكرر: مستوى واحد على الأقل لا يكفي ما لم يُرَ فيه لملء صفه، فنصفّر سجل الفئة كلها ونسحب عشوائياً من بنكها
+    if (tiers.some((tier) => tier.filter((q) => !seen.has(q.id)).length < MIN_PER_TIER)) {
+      mine.forEach((q) => seen.delete(q.id));
+      if (hasAdmin && ent.userId) resets.push(clearSeen(ent.userId, mine.map((q) => q.id)));
+    }
     const questions: Question[] = [];
-    TIERS.forEach((t, ti) => {
-      const tier = shuffle(mine.filter((q) => q.points === t));
-      [...tier.filter((q) => !seen.has(q.id)), ...tier.filter((q) => seen.has(q.id))].slice(0, MIN_PER_TIER).forEach((q, i) => questions.push({ ...q, slot: ti * 2 + i }));
+    // استثناء صارم: لا يدخل اللوحة سؤال في seen أبداً، إلا بعد تصفير الفئة أعلاه
+    tiers.forEach((tier, ti) => {
+      tier.filter((q) => !seen.has(q.id)).slice(0, MIN_PER_TIER).forEach((q, i) => questions.push({ ...q, slot: ti * 2 + i }));
     });
     return { ...c, questions };
   });
+  await Promise.all(resets);
+  return board;
+}
+
+/** يحذف سجل مشاهدة المستخدم لهذه الأسئلة (عند تصفير فئة نفدت أسئلتها غير المكررة). */
+async function clearSeen(userId: string, ids: string[]): Promise<void> {
+  const uuids = ids.filter((i) => /^[0-9a-f-]{36}$/i.test(i));
+  const db = supabaseAdmin();
+  for (let i = 0; i < uuids.length; i += 100) {
+    await db.from('seen_questions').delete().eq('user_id', userId).in('question_id', uuids.slice(i, i + 100));
+  }
 }
 
 export async function markSeen(userId: string, ids: string[]) {
