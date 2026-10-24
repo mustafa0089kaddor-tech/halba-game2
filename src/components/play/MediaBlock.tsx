@@ -30,13 +30,20 @@ function youtube(u: string): { id: string; start: number } | null {
   } catch { return null; }
 }
 
-export default function MediaBlock({ q }: { q: Question }) {
+/**
+ * mode='question': الصوت والفيديو فقط (تبقى ظاهرة أثناء السؤال، والصورة محجوبة حتى لا تحرق الإجابة).
+ * mode='answer': الصورة فقط (تُعرض عند كشف الإجابة بجانب نص الحل).
+ * mode='all' (الافتراضي): كل الوسائط كما كان سابقاً.
+ */
+export default function MediaBlock({ q, mode = 'all' }: { q: Question; mode?: 'all' | 'question' | 'answer' }) {
   const [play, setPlay] = useState(false);
   const [bad, setBad] = useState(false);
   const [playing, setPlaying] = useState(false);
   if (!q.media_url || q.type === 'text') return null;
   // حماية الحقوق: لا يُعرض إلا ما عُلِّم بأنه مرخّص أو من إنتاجنا
   if (q.media_license !== 'free' && q.media_license !== 'own') return null;
+  if (mode === 'question' && q.type === 'image') return null;
+  if (mode === 'answer' && q.type !== 'image') return null;
 
   if (q.type === 'image') {
     if (bad) return null;
