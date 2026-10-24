@@ -52,9 +52,11 @@ function ArtPattern({ variant }: { variant: number }) {
   );
 }
 
-export default function Setup({ cats, names, setNames, picked, setPicked, onStart, busy, error, brand, freeDaily, unlimited, subscriber }: {
+export default function Setup({ cats, names, setNames, picked, setPicked, onStart, busy, error, brand }: {
   cats: Category[]; names: string[]; setNames: (n: string[]) => void; picked: string[]; setPicked: (p: string[]) => void;
-  onStart: () => void; busy: boolean; error: string; brand?: Brand | null; freeDaily: number; unlimited: boolean; subscriber: boolean;
+  onStart: () => void; busy: boolean; error: string; brand?: Brand | null;
+  /** مهملة: أُلغي حد الألعاب اليومي. تبقى اختيارية ومتجاهَلة حتى لا ينكسر المكوّن الأب الذي قد يمررها */
+  freeDaily?: number; unlimited?: boolean; subscriber?: boolean;
 }) {
   const [group, setGroup] = useState<string>('all');
   const [q, setQ] = useState('');
@@ -216,7 +218,6 @@ export default function Setup({ cats, names, setNames, picked, setPicked, onStar
           <button className="btn btn-primary w-full text-lg" disabled={!ready || busy} onClick={onStart}>
             {busy ? 'لحظة…' : ready ? 'ابدأ اللعب' : `اختر ${ar(need - picked.length)} ${need - picked.length === 1 ? 'محور' : 'محاور'} أخرى`}
           </button>
-          {!unlimited && !subscriber && <p className="mt-2 text-center text-xs text-paper/60">{ar(freeDaily)} ألعاب مجانية في اليوم</p>}
         </div>
       </div>
     </div>

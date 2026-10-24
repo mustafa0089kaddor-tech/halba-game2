@@ -22,8 +22,10 @@ const AID_CHIPS = [
   { k: 'time', label: '+٣٠', title: 'وقت إضافي' },
 ] as const;
 
-export default function PlayClient({ cats, ent, freeDaily, initialCat, brand, orgSlug, unlimited = false }: {
-  cats: Category[]; ent: Entitlements; freeDaily: number; initialCat?: string; brand?: Brand | null; orgSlug?: string; unlimited?: boolean;
+export default function PlayClient({ cats, ent, initialCat, brand, orgSlug, unlimited = false }: {
+  cats: Category[]; ent: Entitlements; initialCat?: string; brand?: Brand | null; orgSlug?: string; unlimited?: boolean;
+  /** مهملة: أُلغي حد الألعاب اليومي. تبقى اختيارية ومتجاهَلة حتى لا تنكسر الصفحات التي ما زالت تمررها */
+  freeDaily?: number;
 }) {
   const [phase, setPhase] = useState<Phase>('setup');
   const [names, setNames] = useState(['الصقور', 'النمور']);
@@ -39,7 +41,6 @@ export default function PlayClient({ cats, ent, freeDaily, initialCat, brand, or
   const [turn, setTurn] = useState(0);
   const [active, setActive] = useState<{ q: Question; cat: Category } | null>(null);
   const [busy, setBusy] = useState(false);
-  const [limit, setLimit] = useState(false);
   const [gameId, setGameId] = useState<string | null>(null);
   const loaded = useRef(false);
 
@@ -60,17 +61,10 @@ export default function PlayClient({ cats, ent, freeDaily, initialCat, brand, or
   async function start() {
     setBusy(true); setError('');
     let id: string | null = null;
-    if (!unlimited) {
-      if (ent.userId) {
-        const r = await fetch('/api/games', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'start', teams: names, cats: picked }) }).then((x) => x.json()).catch(() => ({ allowed: true }));
-        if (!r.allowed) { setLimit(true); setBusy(false); return; }
-        id = r.id ?? null;
-      } else {
-        const key = `halba_games_${new Date().toISOString().slice(0, 10)}`;
-        const n = Number(localStorage.getItem(key) ?? 0);
-        if (n >= freeDaily) { setLimit(true); setBusy(false); return; }
-        localStorage.setItem(key, String(n + 1));
-      }
+    /* تسجيل اللعبة في الحساب فقط؛ لا حد يومي ولا عدّاد، واللعب يبدأ حتى لو تعذّر التسجيل */
+    if (!unlimited && ent.userId) {
+      const r = await fetch('/api/games', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'start', teams: names, cats: picked }) }).then((x) => x.json()).catch(() => ({}));
+      id = r.id ?? null;
     }
     const res = await fetch('/api/draw', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cats: picked, seen: readSeen() }) }).then((x) => x.json()).catch(() => null);
     if (!res?.board?.length) { setError(res?.error ?? 'تعذّر تجهيز الأسئلة. حاول مرة أخرى.'); setBusy(false); return; }
@@ -95,26 +89,12 @@ export default function PlayClient({ cats, ent, freeDaily, initialCat, brand, or
     setPhase('results');
   }
 
-  function reset() { setPhase('setup'); setActive(null); setLimit(false); }
+  function reset() { setPhase('setup'); setActive(null); }
 
   if (phase === 'results') return <Results teams={teams} onAgain={reset} brand={brand} />;
 
   if (phase === 'setup') {
-    return (
-      <>
-        <Setup cats={cats} names={names} setNames={setNames} picked={picked} setPicked={setPicked} onStart={start} busy={busy} error={error} brand={brand} freeDaily={freeDaily} unlimited={unlimited} subscriber={ent.subscriber} />
-        {limit && (
-          <div role="alertdialog" aria-label="حد الألعاب" className="fixed inset-0 z-40 grid place-items-center bg-deep/90 p-4 backdrop-blur-sm">
-            <div className="card max-w-sm text-center">
-              <p className="font-display text-3xl font-black text-saffron">انتهت ألعاب اليوم المجانية</p>
-              <p className="my-3 text-paper/80">{ent.userId ? 'اشترك لتلعب بلا حدود وبدون إعلانات، أو عد غداً.' : 'سجّل الدخول للاشتراك، أو عد غداً لألعاب جديدة.'}</p>
-              <a href="/pricing" className="btn btn-primary w-full">شاهد الاشتراك</a>
-              <button className="btn btn-ghost mt-2 w-full" onClick={() => setLimit(false)}>إغلاق</button>
-            </div>
-          </div>
-        )}
-      </>
-    );
+    return <Setup cats={cats} names={names} setNames={setNames} picked={picked} setPicked={setPicked} onStart={start} busy={busy} error={error} brand={brand} />;
   }
 
   const left = board.flatMap((c) => c.questions).filter((q) => !(q.id in done)).length;
