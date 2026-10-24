@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getEntitlements, markSeen } from '@/lib/data';
-import { FREE_DAILY, hasAdmin } from '@/lib/env';
+import { hasAdmin } from '@/lib/env';
 import { supabaseAdmin } from '@/lib/supabase/server';
 
 export async function POST(req: Request) {
@@ -11,11 +11,7 @@ export async function POST(req: Request) {
   const db = supabaseAdmin();
 
   if (body.action === 'start') {
-    if (!ent.subscriber && !ent.isAdmin) {
-      const since = new Date(); since.setUTCHours(0, 0, 0, 0);
-      const { count } = await db.from('games').select('id', { count: 'exact', head: true }).eq('user_id', ent.userId).gte('started_at', since.toISOString());
-      if ((count ?? 0) >= FREE_DAILY) return NextResponse.json({ allowed: false });
-    }
+    /* أُلغي حد الألعاب اليومي: اللعب غير محدود للجميع */
     const { data } = await db.from('games').insert({ user_id: ent.userId, teams: (body.teams ?? []).slice(0, 2).map((t) => String(t).slice(0, 20)), categories: (body.cats ?? []).slice(0, 6) }).select('id').single();
     return NextResponse.json({ allowed: true, id: data?.id ?? null });
   }
