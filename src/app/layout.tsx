@@ -5,10 +5,9 @@ import AuthLink from '@/components/AuthLink';
 import CookieBanner from '@/components/CookieBanner';
 import Logo from '@/components/Logo';
 import SwRegister from '@/components/SwRegister';
-import { SITE_URL } from '@/lib/env';
 import '@/app/globals.css';
 
-/* خط العناوين والعدّاد وأسماء الفرق والنتائج: Cairo (متغيّر، يغطي الأوزان 700 و900) */
+/* خط العناوين والعدّاد وأسماء الفرق والنتائج: Cairo */
 const heading = Cairo({
   subsets: ['arabic', 'latin'],
   display: 'swap',
@@ -23,10 +22,8 @@ const body = Tajawal({
   variable: '--font-body',
 });
 
-// ضمان الرابط الكامل للعبة لتعمل بطاقات المعاينة بدقة
-const siteUrl = SITE_URL && !SITE_URL.includes('localhost')
-  ? SITE_URL
-  : 'https://halba-challenge.netlify.app';
+// الرابط الرسمي للموقع
+const siteUrl = 'https://halba-challenge2.netlify.app';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
